@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "874265170437",
+    "firebase_url": "https://fir-chatexam-bb2d5.firebaseio.com",
+    "project_id": "fir-chatexam-bb2d5",
+    "storage_bucket": "fir-chatexam-bb2d5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874265170437:android:93135383f0fffc69",
+        "android_client_info": {
+          "package_name": "com.example.firebasechatexam"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "874265170437-8fo29fmsmc3fsn93v03n6je0hge3ce3d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.firebasechatexam",
+            "certificate_hash": "9adada2511eb53ecfe09aa98f3a69463f4a73221"
+          }
+        },
+        {
+          "client_id": "874265170437-qrfqrooip2itbo8b0ksgv94c595125v9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNNKeIeZtYT2e2SJrYyqVaNTphCmvuWCo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "874265170437-qrfqrooip2itbo8b0ksgv94c595125v9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
