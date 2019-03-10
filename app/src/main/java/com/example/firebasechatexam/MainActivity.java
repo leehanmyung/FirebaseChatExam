@@ -30,7 +30,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
-import org.w3c.dom.Text;
+
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -147,6 +147,44 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // 리사이클러뷰에 레이아웃 매니저와 어댑터 설정
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
+
+
+        // 소프트 키에 가려 보이지 않는 최신  메시지에 대한 처리
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                super.onItemRangeChanged(positionStart, itemCount);
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                LinearLayoutManager layoutManager = (LinearLayoutManager) mMessageRecyclerView.getLayoutManager();
+                int lastVisiblePostion = layoutManager.findLastCompletelyVisibleItemPosition();
+
+                if(lastVisiblePostion == -1 || (positionStart >= (friendlyMessageCount -1) &&
+                        lastVisiblePostion == (positionStart -1))){
+                    mMessageRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mMessageRecyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener(){
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom){
+                if(bottom < oldBottom){
+                    v.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMessageRecyclerView.smoothScrollToPosition(mFirebaseAdapter.getItemCount());
+                        }
+
+
+                    }, 100);
+                }
+            }
+
+
+        });
+
+
+
 
     }
 
