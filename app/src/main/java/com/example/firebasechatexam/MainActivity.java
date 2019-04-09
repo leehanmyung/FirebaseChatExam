@@ -7,6 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputFilter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,20 +25,28 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 
+import java.util.HashMap;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
+    private FirebaseRemoteConfig mFirebaseRemoteconfig;
     private FirebaseRecyclerAdapter<ChatMessage, MessageViewHolder> mFirebaseAdapter;
     private RecyclerView mMessageRecyclerView;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     // Firebase 인스턴스 변수
     private FirebaseAuth mFirebaseAuth;
@@ -101,6 +111,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             if(mFirebaseUser.getPhotoUrl() != null){
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
+
+
+
 
         }
 
@@ -183,6 +196,24 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         });
 
+        // Firebase Remote Config 초기화
+        mFirebaseRemoteconfig = FirebaseRemoteConfig.getInstance();
+
+        // Firebase Remote Config 설정
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(true).build();
+
+        // 인턴넷 연결이 안 되었을 때 기본값 정의
+
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("message_length", 10L);
+
+        // 설정과 기본값 설정
+        mFirebaseRemoteconfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteconfig.setDefaults(defaultConfigMap);
+
+        // 원격 구성 가저오기
+        fetchConfig();
 
 
 
@@ -216,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     @Override
     protected void onStart(){
-        super.onStart();;
+        super.onStart();
         // FirebaseRecyclerAdapter 실시간 쿼리 시작
         mFirebaseAdapter.startListening();
     }
@@ -228,5 +259,45 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         mFirebaseAdapter.stopListening();
     }
 
+    // 원격 구성 가져오기
+    public void fetchConfig(){
+        long cacheExpiration = 3600; // 1시간
+
+        // 개발자 모드라면 0초로 하기
+        if(mFirebaseRemoteconfig.getInfo().getConfigSettings().isDeveloperModeEnabled()){
+            cacheExpiration = 0;
+        }
+
+        mFirebaseRemoteconfig.fetch(cacheExpiration).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                // 원격 구성 가져요기 성공
+                mFirebaseRemoteconfig.activateFetched();
+                applyRetrievedLengthLimit();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                // 원격 구성 가져오기 실패
+                Log.w(TAG, "Error fetching config : " + e.getMessage());
+                applyRetrievedLengthLimit();
+
+            }
+        });
+
+
+
+    }
+
+    /**
+     *  서버에서 가져 오거나 캐시된 값을 가져옴
+     */
+
+    private void applyRetrievedLengthLimit(){
+        Long messageLength = mFirebaseRemoteconfig.getLong("message_length");
+        mMessageEditText.setFilters(new InputFilter[]{
+                new InputFilter.LengthFilter(messageLength.intValue())});
+        Log.d(TAG, "메시지 길이 : " + messageLength);
+    }
 
 }
